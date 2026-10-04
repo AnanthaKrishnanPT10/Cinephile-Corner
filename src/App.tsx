@@ -9,12 +9,26 @@ const movies: Movie[] = [
   { id:4, title: "Heat", year: 1995, rating: 4.5, genre: "Action" }
 ];
 
+
+
 function App(){
   const [query, setQuery] = useState("");
+  const [likedIds, setLikedIds] = useState<number[]>([]);
 
+  const normalizedQuery = query.toLowerCase();
   const filteredMovies = movies.filter((movie) => 
-    movie.title.toLowerCase().includes(query.toLowerCase())
+    movie.title.toLowerCase().includes(normalizedQuery) 
+  || movie.genre.toLowerCase().includes(normalizedQuery)
   );
+
+  const count = filteredMovies.length;
+
+  function toggleLike(id: number){
+    setLikedIds((prev)=>
+    prev.includes(id)
+  ? prev.filter((likedId)=> likedId !== id)
+  : [...prev,id]);
+  }
 
   return (
     <div>
@@ -25,9 +39,17 @@ function App(){
        value={query}
        onChange={(e) => setQuery(e.target.value)}
        />
-      {filteredMovies.map((movie) => (
-        <MovieCard key={ movie.id } movie={ movie } />
-      ))}
+      {
+      count === 0 ? ( <h3>No Movies found</h3>) : (
+      filteredMovies.map((movie) => (
+        <MovieCard 
+        key={ movie.id } 
+        movie={ movie } 
+        isLiked={likedIds.includes(movie.id)}
+        onToggleLike={() => toggleLike(movie.id) }/>
+      )))
+      }
+      {query !== "" && ( <p> {count} {count === 1 ? "movie" : "movies"}</p>) }
     </div>
   )
 }
