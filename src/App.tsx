@@ -39,6 +39,7 @@ function App(){
        value={query}
        onChange={(e) => setQuery(e.target.value)}
        />
+       <p>Liked : {likedIds.length}</p>
       {
       count === 0 ? ( <h3>No Movies found</h3>) : (
       filteredMovies.map((movie) => (
