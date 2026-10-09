@@ -1,24 +1,49 @@
 import MovieCard  from "./MovieCard";
 import type { Movie } from "./types";
 import { useState } from "react";
-
-const movies: Movie[] = [
-  {id:1, title: "Past Lives", year: 2023, rating: 4.5, genre: "Romance" },
-  { id: 2, title: "Parasite", year: 2019, rating: 4.6, genre: "Thriller" },
-  { id: 3, title: "Whiplash", year: 2014, rating: 4.4, genre: "Drama" },
-  { id:4, title: "Heat", year: 1995, rating: 4.5, genre: "Action" }
-];
+import { useEffect } from "react";
 
 
 
 function App(){
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [loading,setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [query, setQuery] = useState("");
   const [likedIds, setLikedIds] = useState<number[]>([]);
 
+  useEffect(()=>{
+    async function loadMovies(){
+    try{
+      const res= await fetch(
+        `https://api.themoviedb.org/3/movie/popular?api_key=${import.meta.env.VITE_TMDB_KEY}`
+      );
+      if (!res.ok) throw new Error("Request failed");
+      const data = await res.json();
+      setMovies(
+        data.results.map((m: any) => ({
+          id: m.id,
+          title: m.title,
+          year: m.release_date?.slice(0,4) ?? "",
+          rating: m.vote_average,
+          posterPath: m.poster_path,
+        }))
+      );
+    } catch(err) {
+      console.error(err);
+      setError("Couldn't load movies.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  loadMovies();
+},[]);
+
   const normalizedQuery = query.toLowerCase();
   const filteredMovies = movies.filter((movie) => 
-    movie.title.toLowerCase().includes(normalizedQuery) 
-  || movie.genre.toLowerCase().includes(normalizedQuery)
+    movie.title.toLowerCase().includes(normalizedQuery)
+
   );
 
   const count = filteredMovies.length;
@@ -30,6 +55,8 @@ function App(){
   : [...prev,id]);
   }
 
+  
+
   return (
     <div>
       <h1>Movie Finder</h1>
@@ -40,9 +67,14 @@ function App(){
        onChange={(e) => setQuery(e.target.value)}
        />
        <p>Liked : {likedIds.length}</p>
+       
       {
-      count === 0 ? ( <h3>No Movies found</h3>) : (
-      filteredMovies.map((movie) => (
+        loading ? (
+          <p>Loading...</p>
+        ): error ? (
+          <p>{error}</p>
+        ) : count === 0 ? ( <h3>No Movies found</h3>) : (
+        filteredMovies.map((movie) => (
         <MovieCard 
         key={ movie.id } 
         movie={ movie } 
@@ -50,7 +82,11 @@ function App(){
         onToggleLike={() => toggleLike(movie.id) }/>
       )))
       }
-      {query !== "" && ( <p> {count} {count === 1 ? "movie" : "movies"}</p>) }
+      {query !== "" && (
+         <p> 
+          {count} {count === 1 ? "movie" : "movies"}
+         </p>
+        ) }
     </div>
   )
 }
