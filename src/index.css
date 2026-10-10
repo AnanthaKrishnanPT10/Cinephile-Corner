@@ -1,0 +1,13 @@
+.movie-grid
+{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+
+}
+
+.movie-card img
+{
+    width:100%;
+    border-radius:8px;
+}
